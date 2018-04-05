@@ -299,6 +299,17 @@ namespace gams
       template<typename ContainType>
       void from_array(const ContainType &in);
 
+      void update(const Coordinate &o) {
+        CoordType &s = as_coord_type();
+        const CoordType &oth = o.as_coord_type();
+        for (int i = 0; i < oth.size() && i < s.size(); ++i) {
+          double x = oth.get(i);
+          if (x != INVAL_COORD) {
+            s.set(i, x);
+          }
+        }
+      }
+
       /**
        * Compares coordinates values to those in the container. The container
        * must support operator[], returning a numerical type. The values in

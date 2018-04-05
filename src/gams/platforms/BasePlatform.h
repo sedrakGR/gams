@@ -64,6 +64,7 @@
 #include "gams/pose/Position.h"
 #include "gams/pose/Pose.h"
 #include "madara/knowledge/KnowledgeBase.h"
+#include "madara/knowledge/rcw/MethodTracker.h"
 
 namespace gams
 {
@@ -375,6 +376,47 @@ namespace gams
 
     // deprecated typdef. Please use BasePlatform instead.
     typedef  BasePlatform    Base;
+
+    namespace rcw {
+      using namespace madara::knowledge::rcw;
+
+      class Command {
+      protected:
+        BasePlatform *plat_;
+      public:
+        Command(BasePlatform *p) : plat_(p) {}
+      };
+
+      class Pose : protected Command {
+        double loc_epsilon_ = 0.1;
+        double rot_epsilon_ = M_PI/16;
+      public:
+        Pose(BasePlatform *p, double loc_epsilon, double rot_epsilon) :
+          Command(p), loc_epsilon_(loc_epsilon), rot_epsilon_(rot_epsilon) {}
+
+        Pose(BasePlatform *p, double loc_epsilon) :
+          Command(p), loc_epsilon_(loc_epsilon) {}
+
+        using Command::Command;
+
+        template<class T, class Opts>
+        friend BaseTracker::uptr make_tracker(T *tracked, const Pose &m,
+                  Opts opts, madara::knowledge::KnowledgeBase &) {
+          return make_lambda_tracker(tracked, opts,
+            [=](T *t){*t = m.plat_->get_location();},
+            [=](T *t){m.plat_->pose(*t, m.loc_epsilon_, m.rot_epsilon_);});
+        }
+
+        template<class T, class Opts>
+        friend BaseTracker::uptr make_tracker(std::pair<T, int> *tracked, const Pose &m,
+                  Opts opts, madara::knowledge::KnowledgeBase &) {
+          using pair_type = std::pair<T, int>;
+          return make_lambda_tracker(tracked, opts,
+            [=](pair_type *t){t->first = m.plat_->get_location();},
+            [=](pair_type *t){t->second = m.plat_->pose(t->first, m.loc_epsilon_, m.rot_epsilon_);});
+        }
+      };
+    }
   }
 }
 

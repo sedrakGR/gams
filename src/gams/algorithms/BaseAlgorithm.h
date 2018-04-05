@@ -60,6 +60,7 @@
 #include "gams/variables/Self.h"
 #include "gams/pose/Region.h"
 #include "madara/knowledge/KnowledgeBase.h"
+#include "madara/knowledge/rcw/Transaction.h"
 
 #include "gams/loggers/GlobalLogger.h"
 
@@ -223,6 +224,40 @@ namespace gams
     typedef  BaseAlgorithm    Base;
 
     typedef  std::vector <BaseAlgorithm *>   Algorithms;
+
+    class GAMSExport RCWAlgorithm : public BaseAlgorithm
+    {
+    protected:
+      madara::knowledge::rcw::Transaction transaction_;
+
+    public:
+      RCWAlgorithm (
+        madara::knowledge::KnowledgeBase * knowledge,
+        platforms::BasePlatform * platform = 0,
+        variables::Sensors * sensors = 0,
+        variables::Self * self = 0,
+        variables::Agents * agents = 0) :
+          BaseAlgorithm(knowledge, platform, sensors, self, agents),
+          transaction_(*knowledge)
+        {}
+
+      /**
+       * Pulls data from transaction
+       **/
+      int analyze (void) final override { transaction_.pull(); return OK; }
+
+      /**
+       * Calls compute, with transaction
+       **/
+      int plan (void) final override { return compute(transaction_); }
+
+      virtual int compute (const madara::knowledge::rcw::Transaction &transaction) = 0;
+
+      /**
+       * Pushes data to transaction
+       **/
+      int execute (void) final override { transaction_.push(); return OK; }
+    };
   }
 }
 
