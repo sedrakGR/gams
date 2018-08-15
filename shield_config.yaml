@@ -1,0 +1,273 @@
+frames:
+  base_frame: p1/base_link
+  world_frame: geo
+
+topics:
+  mavros/local/pose:
+    name: .sensors.px4.location
+    circular_buffer_size: 100000
+  slam_out_pose:
+    name: .sensors.slam.location
+    circular_buffer_size: 100000
+  map_compressed:
+    name: .sensors.slam
+    circular_buffer_size: 100000
+  camera/image_raw:
+    name: .sensors.camera.0
+    circular_buffer_size: 100000
+  first:
+    name: .sensors.lidar.first
+    circular_buffer_size: 100000
+  last:
+    name: .sensors.lidar.last
+    circular_buffer_size: 100000
+  first_echo_filtered:
+    name: .sensors.lidar.first.filtered
+    circular_buffer_size: 100000
+  exploration_scan_marking_clearing:
+    name: .sensors.lidar.extrapolation
+    circular_buffer_size: 100000
+  aviate/frontiers:
+    name: .env.obstacles
+    circular_buffer_size: 100000
+  aviate/planner/potential:
+    name: .debug.aviate
+    circular_buffer_size: 100000
+  global_plan:
+    name: .plan.global
+    circular_buffer_size: 100000
+  local_planner/debug_lpn/local_traj:
+    name: .plans.local
+    circular_buffer_size: 100000
+  local_planner/debug_lpn/beeliner_traj:
+    name: .plans.local.altitude
+    circular_buffer_size: 100000
+  local_planner/trajectory_point:
+    name: agent.0.dest
+    circular_buffer_size: 100000
+  gps/map:
+    name: .sensors.gps.location
+    circular_buffer_size: 100000
+  mavros/distance_sensor/bottom_laser:
+    name: .sensors.altitude
+    circular_buffer_size: 100000
+  global_costmap_rviz:
+    name: .plans.costmap.global
+    circular_buffer_size: 100000
+  mavros/distance_sensor/top_sonar:
+    name: .sensors.sonar.top
+    circular_buffer_size: 100000
+  mavros/distance_sensor/bottom_sonar:
+    name: .sensors.sonar.bottom
+    circular_buffer_size: 100000
+  imu/baro:
+    name: .sensors.baro
+    circular_buffer_size: 100000
+  imu/data_raw:
+    name: .sensors.imu
+    circular_buffer_size: 100000
+  msckf/terrain_height:
+    name: .sensors.terrain_height
+    circular_buffer_size: 100000
+  msckf/prop/odom:
+    name: .sensors.msckf.location
+    circular_buffer_size: 100000
+  aviate/topological_map/global_costmap_compressed:
+    name: .plans.costmap.global.compressed
+    circular_buffer_size: 100000
+  aviate/graph:
+    name: .plans.global.poses.history
+    circular_buffer_size: 100000
+  force_field/forward_downward_sonar_filtered:
+    name: .sensors.sonar.top.filtered
+    circular_buffer_size: 100000
+  force_field/forward_upward_sonar_filtered:
+    name: .sensors.sonar.bottom.filtered
+    circular_buffer_size: 100000
+  mode_control/app_geofence:
+    name: .plans.geofence
+    circular_buffer_size: 100000
+  mode_control/automode:
+    name: .plans.automode
+    circular_buffer_size: 100000
+  mode_control/flightmode:
+    name: .plans.flightmode
+    circular_buffer_size: 100000
+  mode_control/trajectory_point:
+    name: .plans.trajectory_point
+    circular_buffer_size: 100000
+  shield_hector_mapping/shield_hector_map:
+    name: .sensors.hectormap
+    circular_buffer_size: 100000
+  scan_filtered:
+    name: .sensors.lidar.filtered
+    circular_buffer_size: 100000
+
+capnp_schemas:
+  - $(GAMS_ROOT)/src/gams/types/AHRS.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/AttitudeTarget.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/BatteryState.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/BeelinerInfo.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Bool.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/CameraInfo.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ClonePoses.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ColorRGBA.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/CompressedImage.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/CompressedOccupancyGrid.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/CompressedOccupancyGridUpdate.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Cpu.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/DeltaPose2D.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Detection.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/DetectionsStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/DiagnosticArray.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/DiagnosticStatus.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Disk.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/EntranceDetection.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Environment.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ExploreActionGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ExploreGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ExtendedState.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/FluidPressure.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GoalID.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GoalPathDefinition.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GoalStatusArray.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GoalStatus.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GotoActionGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GotoGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/GPSVelocity.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Header.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Illuminance.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/ImageMetadata.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Imu.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Int32.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/KeyValue.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/LaserEcho.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/LaserScan.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/LctoMetric.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Log.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/MagneticField.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/MapMetaData.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/MarkerArray.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Marker.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Mavlink.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/MeasurementMetadata.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/MultiEchoLaserScan.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/NavSatFix.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/NavSatStatus.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/navsol.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Net.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/OccupancyGrid.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/OccupancyGridUpdate.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Odometry.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Path.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Point32.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Point.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PointCloud2.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PointDefinition.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PointField.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PointStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Polygon.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PolygonStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Pose.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PoseStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PoseWithCovariance.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PositionTarget.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/PositionTargetList.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Process.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Quaternion.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/RadioMetrics.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Range.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/RCOut.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/RegionOfInterest.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/SF20Info.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/SmartEnvironment.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/State.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/String.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/SysStats.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/SystemCommand.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Temperature.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TerrainBounds.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TerrainHeight.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TFMessage.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Thread.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TimeReference.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TrajectoryInfo.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Transform.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TransformStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Twist.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TwistStamped.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/TwistWithCovariance.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/UpdateResiduals.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/UVIDList.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Vector3.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/WallFollowActionGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/WallFollowGoal.capnp.bin
+  - $(GAMS_ROOT)/src/gams/types/Wifi.capnp.bin
+
+schema_map:
+  actionlib_msgs/GoalID: src/gams/types/GoalID.capnp:GoalID
+  actionlib_msgs/GoalStatusArray: src/gams/types/GoalStatusArray.capnp:GoalStatusArray
+  aviate/ExploreActionGoal: src/gams/types/ExploreActionGoal.capnp:ExploreActionGoal
+  aviate/GotoActionGoal: src/gams/types/GotoActionGoal.capnp:GotoActionGoal
+  aviate/WallFollowActionGoal: src/gams/types/WallFollowActionGoal.capnp:WallFollowActionGoal
+  compressed_map_transport/CompressedOccupancyGrid: src/gams/types/CompressedOccupancyGrid.capnp:CompressedOccupancyGrid
+  compressed_map_transport/CompressedOccupancyGridUpdate: src/gams/types/CompressedOccupancyGridUpdate.capnp:CompressedOccupancyGridUpdate
+  diagnostic_msgs/DiagnosticArray: src/gams/types/DiagnosticArray.capnp:DiagnosticArray
+  entrance_detector/EntranceDetection: src/gams/types/EntranceDetection.capnp:EntranceDetection
+  geometry_msgs/PointStamped: src/gams/types/PointStamped.capnp:PointStamped
+  geometry_msgs/PoseStamped: src/gams/types/PoseStamped.capnp:PoseStamped
+  geometry_msgs/TwistStamped: src/gams/types/TwistStamped.capnp:TwistStamped
+  map_msgs/OccupancyGridUpdate: src/gams/types/OccupancyGridUpdate.capnp:OccupancyGridUpdate
+  mavros_msgs/AttitudeTarget: src/gams/types/AttitudeTarget.capnp:AttitudeTarget
+  mavros_msgs/ExtendedState: src/gams/types/ExtendedState.capnp:ExtendedState
+  mavros_msgs/GPSVelocity: src/gams/types/GPSVelocity.capnp:GPSVelocity
+  mavros_msgs/Mavlink: src/gams/types/Mavlink.capnp:Mavlink
+  mavros_msgs/PositionTarget: src/gams/types/PositionTarget.capnp:PositionTarget
+  mavros_msgs/RCOut: src/gams/types/RCOut.capnp:RCOut
+  mavros_msgs/State: src/gams/types/State.capnp:State
+  msckf_pkg/ClonePoses: src/gams/types/ClonePoses.capnp:ClonePoses
+  msckf_pkg/UVIDList: src/gams/types/UVIDList.capnp:UVIDList
+  msckf_pkg/UpdateResiduals: src/gams/types/UpdateResiduals.capnp:UpdateResiduals
+  msckf_pkg/navsol: src/gams/types/navsol.capnp:navsol
+  multimodal_detector/DetectionsStamped: src/gams/types/DetectionsStamped.capnp:DetectionsStamped
+  nav_msgs/OccupancyGrid: src/gams/types/OccupancyGrid.capnp:OccupancyGrid
+  nav_msgs/Odometry: src/gams/types/Odometry.capnp:Odometry
+  nav_msgs/Path: src/gams/types/Path.capnp:Path
+  rosgraph_msgs/Log: src/gams/types/Log.capnp:Log
+  sensor_msgs/BatteryState: src/gams/types/BatteryState.capnp:BatteryState
+  sensor_msgs/CameraInfo: src/gams/types/CameraInfo.capnp:CameraInfo
+  sensor_msgs/CompressedImage: src/gams/types/CompressedImage.capnp:CompressedImage
+  sensor_msgs/FluidPressure: src/gams/types/FluidPressure.capnp:FluidPressure
+  sensor_msgs/Illuminance: src/gams/types/Illuminance.capnp:Illuminance
+  sensor_msgs/Imu: src/gams/types/Imu.capnp:Imu
+  sensor_msgs/LaserScan: src/gams/types/LaserScan.capnp:LaserScan
+  sensor_msgs/MagneticField: src/gams/types/MagneticField.capnp:MagneticField
+  sensor_msgs/MultiEchoLaserScan: src/gams/types/MultiEchoLaserScan.capnp:MultiEchoLaserScan
+  sensor_msgs/NavSatFix: src/gams/types/NavSatFix.capnp:NavSatFix
+  sensor_msgs/PointCloud2: src/gams/types/PointCloud2.capnp:PointCloud2
+  sensor_msgs/Range: src/gams/types/Range.capnp:Range
+  sensor_msgs/Temperature: src/gams/types/Temperature.capnp:Temperature
+  sensor_msgs/TimeReference: src/gams/types/TimeReference.capnp:TimeReference
+  shield_msgs/AHRS: src/gams/types/AHRS.capnp:AHRS
+  shield_msgs/BeelinerInfo: src/gams/types/BeelinerInfo.capnp:BeelinerInfo
+  shield_msgs/DeltaPose2D: src/gams/types/DeltaPose2D.capnp:DeltaPose2D
+  shield_msgs/Environment: src/gams/types/Environment.capnp:Environment
+  shield_msgs/GoalPathDefinition: src/gams/types/GoalPathDefinition.capnp:GoalPathDefinition
+  shield_msgs/LctoMetric: src/gams/types/LctoMetric.capnp:LctoMetric
+  shield_msgs/MeasurementMetadata: src/gams/types/MeasurementMetadata.capnp:MeasurementMetadata
+  shield_msgs/PositionTargetList: src/gams/types/PositionTargetList.capnp:PositionTargetList
+  shield_msgs/RadioMetrics: src/gams/types/RadioMetrics.capnp:RadioMetrics
+  shield_msgs/SF20Info: src/gams/types/SF20Info.capnp:SF20Info
+  shield_msgs/SysStats: src/gams/types/SysStats.capnp:SysStats
+  shield_msgs/SystemCommand: src/gams/types/SystemCommand.capnp:SystemCommand
+  shield_msgs/TerrainBounds: src/gams/types/TerrainBounds.capnp:TerrainBounds
+  shield_msgs/TerrainHeight: src/gams/types/TerrainHeight.capnp:TerrainHeight
+  shield_msgs/TrajectoryInfo: src/gams/types/TrajectoryInfo.capnp:TrajectoryInfo
+  smart_environment_classifier/SmartEnvironment: src/gams/types/SmartEnvironment.capnp:SmartEnvironment
+  std_msgs/Bool: src/gams/types/Bool.capnp:Bool
+  std_msgs/Int32: src/gams/types/Int32.capnp:Int32
+  std_msgs/String: src/gams/types/String.capnp:String
+  tf2_msgs/TFMessage: src/gams/types/TFMessage.capnp:TFMessage
+  video_monitor/ImageMetadata: src/gams/types/ImageMetadata.capnp:ImageMetadata
+  visualization_msgs/Marker: src/gams/types/Marker.capnp:Marker
+  visualization_msgs/MarkerArray: src/gams/types/MarkerArray.capnp:MarkerArray
