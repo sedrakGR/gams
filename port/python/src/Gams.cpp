@@ -57,25 +57,14 @@ BOOST_PYTHON_MODULE(gams)
   // Launch the appropriate thread management initialization
   PyEval_InitThreads();
 
-  // Declare classes inside Madara namespace (top namespace of Python module)
-
   class_<std::vector<std::string>>("StringVector")
       .def(vector_indexing_suite<std::vector<std::string>>());
 
-  class_<std::vector<madara::knowledge::KnowledgeRecord::Integer>>(
-      "IntegerVector")
-      .def(vector_indexing_suite<std::vector<int64_t>>());
+  // Declare classes inside Madara namespace (top namespace of Python module)
 
-  class_<std::vector<double>>("DoubleVector")
-      .def(vector_indexing_suite<std::vector<double>>());
+  def("to_pyframes", &stl_to_python<std::vector<gams::pose::ReferenceFrame>>);
 
-  def("to_pydoubles", &stl_to_python<std::vector<double>>);
-
-  def("to_pylongs", &stl_to_python<std::vector<int64_t>>);
-
-  def("from_pydoubles", &python_to_stl<std::vector<double>>);
-
-  def("from_pylongs", &python_to_stl<std::vector<int64_t>>);
+  def("from_pyframes", &python_to_stl<std::vector<gams::pose::ReferenceFrame>>);
 
   define_pose();
 }

@@ -103,18 +103,19 @@ z = []
 u = []
 v = []
 w = []
+
 for key, value in reader: 
     if prefix in key and not suffix1 in key:
         # key = key.split('.')
         # key = key[3]
-        # print(key)
+        # print(key, value.to_string())
         kb.set(key, value)
 
 rf = gp.ReferenceFrame()
 
 kb.print_knowledge()
 trans_frames = gp.ReferenceFrame.load_tree(kb, 
-    madara.from_pystrings(['geo','p1_odom']) , 1, fes )
+    madara.from_pystrings(['geo','p1_map']) , 18446744073709551615, fes )
 
 # trans_frames[0].origin().transform_to(trans_frames[1])
 # vis.plt.show()
