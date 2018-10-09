@@ -1,0 +1,25 @@
+# config.yaml
+# yaml file to allow user to select which knowledge records they would like to see plotted 
+
+
+
+data_source:
+
+  stk_file: '/home/stallone/data/output/agent.0/SAFE_reliability_rc_v3.4.0__pikachu-16-0004__2018-08-16-09-47-39.stk'
+  transport: ''
+
+knowledge_record:    # Specify which KRs you would like plotted as a python list 
+
+  frame_types:               
+     ['p1_base_footprint']
+  any_types:
+     ['sensors.baro']
+
+plot_style:          # Specify layout and plot properties
+
+  line_color: 'red'
+  x_axis_range: [0, 10]
+  y_axis_range: [0, 10]
+  z_axis_range: [0, 10]
+
+  
