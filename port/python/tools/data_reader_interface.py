@@ -1,10 +1,14 @@
-import madara.knowledge as engine
 import madara
+import madara.knowledge as engine
+from madara.knowledge import Any
 import gams.pose as gp
+import os
+import capnp
 
 from datetime import datetime
 
 
+#key_to_capnpfile = {key: value.to_any().tag() for key, value in reader if value.is_any_type()}
 
 from time import sleep
 
@@ -16,9 +20,14 @@ fes = gp.FrameEvalSettings()
 
 nano_size = 1000000000
 
-class DataReaderInterface:
 
-# get all keys in a list
+class DataReaderInterface:
+  capnp_registered_schemas = set()
+
+  def __init__(self, capnp_folder):
+    self.capnp_folder = capnp_folder
+
+  # get all keys in a list
   def get_keys(self):
     pass
 
@@ -29,17 +38,36 @@ class DataReaderInterface:
   def get_current_value(self, key):
     pass
 
-  def get_reference_frame(self, key, value):
-    kb.set(key, value)
+  def capnp_crunch(self, key, value):
+    schema = value.to_any().tag()
+    # print ('Schema string:' + schema_str)
+    # print ('/home/stallone/shield_schemas/shield/'+ schema +'.capnp')
+    # parser = capnp.SchemaParser()
+    # schema_file = parser.load('/home/stallone/shield_schemas/shield/'+ schema +'.capnp')
+    # print getattr(schema_file, schema)
+    # schema_name = capnp.load_schema('/home/stallone/shield_schemas/shield/'+ schema )
+    if not (key in DataReaderInterface.capnp_registered_schemas):
+      schema_file = capnp.load(self.capnp_folder + '/' + schema + '.capnp',
+                               imports=[os.environ['CAPNP_ROOT'] + '/c++/src'])
+      Any.register_class(schema, getattr(schema_file, schema))
+      DataReaderInterface.capnp_registered_schemas.add(key)
+
+    new_value = value.to_any().reader()
+    return new_value
 
 
 
 class DataReaderFromFile(DataReaderInterface):
-  def __init__(self, file_name):
+  def __init__(self, capnp_schemas_folder, file_name):
+    DataReaderInterface.__init__(self, capnp_schemas_folder)
+
+
     self.settings = engine.CheckpointSettings()
     if not file_name:
-      print "cannot init data reader, file name is not valid"
+      print "DataReaderFromFile: cannot init data reader, file name is not valid"
+
     self.settings.filename = (file_name)
+    self.capnp_folder = capnp_schemas_folder
     self.knowledge_base = engine.KnowledgeBase()
 
     #retrieve all (key, value)s that can be plotted
@@ -119,7 +147,7 @@ class DataReaderFromFile(DataReaderInterface):
   # and a flag indicatingif the value is already the latest
 
   #frames_of_choice are gams frame, to know which frames_of_choice to retrieve
-  def get_current_value(self, key, frames_of_choice=['geo']):
+  def get_current_value(self, key, frames_of_choice=['geo', 'p1_base_stabilized']):
     # relative current time representing the simulation time passed from the first toi
     relative_current_time = int((datetime.utcnow() -
                                  datetime.utcfromtimestamp(0)).total_seconds()
@@ -140,13 +168,21 @@ class DataReaderFromFile(DataReaderInterface):
 
     # in case already at the end, just return last value as current
     if current_index == last_index:
-      return values_list[last_index], False
+      value = values_list[last_index]
+      if value.is_any_type():
+        return self.get_capnp_value(key, values_list[last_index]), False
+      else:
+        return value, False
 
     # last argument is the relative current time
     index, value  = self.find_next_value(values_list, current_index, last_index, relative_current_time)
-    self.current_indexes[key] = index
 
-    return value, True
+    self.current_indexes[key] = index
+    print index
+    if value.is_any_type():
+      return self.get_capnp_value(key, value), True
+    else:
+      return value, True
 
 
   # get the index of the value and the value that corresponds to the simluation current time
@@ -211,6 +247,11 @@ class DataReaderFromFile(DataReaderInterface):
       # if exception, return None
       return None, True
 
+  # retrieve the dictionary for the capnp from appropriate schema
+  def get_capnp_value(self, key, value):
+    return self.capnp_crunch(key, value).to_dict()
+
+
 
 
   # return true when type is something that can be plot
@@ -219,7 +260,14 @@ class DataReaderFromFile(DataReaderInterface):
   def check_type_for_plotting(self, key, value):
     if key.endswith(toi_key_suffix):
       return False
-    #TODO: check for Any type as well
+
+    # if gams frames or number types
     if key.startswith(frames_prefix) or value.is_integer_type() or value.is_double_type():
       return True
+
+    elif value.is_any_type() and value.to_any().tag():
+      # if capnp file then can have keys to be plotted
+      #print key
+      return True
+
     return False
