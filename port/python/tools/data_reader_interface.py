@@ -40,12 +40,6 @@ class DataReaderInterface:
 
   def capnp_crunch(self, key, value):
     schema = value.to_any().tag()
-    # print ('Schema string:' + schema_str)
-    # print ('/home/stallone/shield_schemas/shield/'+ schema +'.capnp')
-    # parser = capnp.SchemaParser()
-    # schema_file = parser.load('/home/stallone/shield_schemas/shield/'+ schema +'.capnp')
-    # print getattr(schema_file, schema)
-    # schema_name = capnp.load_schema('/home/stallone/shield_schemas/shield/'+ schema )
     if not (key in DataReaderInterface.capnp_registered_schemas):
       schema_file = capnp.load(self.capnp_folder + '/' + schema + '.capnp',
                                imports=[os.environ['CAPNP_ROOT'] + '/c++/src'])
@@ -178,7 +172,6 @@ class DataReaderFromFile(DataReaderInterface):
     index, value  = self.find_next_value(values_list, current_index, last_index, relative_current_time)
 
     self.current_indexes[key] = index
-    print index
     if value.is_any_type():
       return self.get_capnp_value(key, value), True
     else:

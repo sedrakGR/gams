@@ -109,13 +109,8 @@ class Plotter:
 
   # this function creates or updates the plot for the provided config of plotter
   def visualize(self):
-    # pause = False
-   # def onClick(event):
-   #   global pause
-   #   pause ^= True  
-
-   # if not pause:
-    plt.figure(self.plot_name)
+    fig = plt.figure(self.plot_name)
+    plt.clf()
     value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
     if not value or not has_next:
       return
@@ -145,10 +140,6 @@ class Plotter:
           self.values[1].pop(0)
         plt.subplot(self.number_of_rows, self.number_of_columns, 1, xlabel='toi')
         plt.plot(self.values[0], self.values[1])
-       #   axpause = plt.axes([0.7, 0.05, 0.1, 0.075])
-       #   bpause = Button(axpause,'Pause/Play')
-        #  bpause.on_clicked(onClick)
-
 
     plt.pause(0.000000001)
 
@@ -156,24 +147,12 @@ class Plotter:
   # visualizes a certain subkey
   # not to be called from outside
   def visualize_subkey(self, value, index):
-
-   # global pause
-   # pause = False
-
-   # def onClick(event):
-     # global pause
-    #  pause ^= True  
-       
-    # print pause 
-   # if not pause:
     subkey = self.subkeys[index]
 
     plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
                 ylabel=subkey[1][1])
 
     if self.is_capnp_type:
-#      print value
-#      print value['header']
       self.visualize_capnp_value(value, subkey, index)
 
     elif subkey[0][0] == -1:
@@ -200,9 +179,6 @@ class Plotter:
         self.values[index][0].pop(0)
         self.values[index][1].pop(0)
     plt.plot(self.values[index][0], self.values[index][1])
-     # axpause = plt.axes([0.7, 0.05, 0.1, 0.075])
-     # bpause = Button(axpause,'Pause/Play')
-     # bpause.on_clicked(onClick)
 
       
 
@@ -238,13 +214,13 @@ class Plotter:
 
     # get the first value from map as subvalue_2
     if subkey_list2[0].startswith('[') and subkey_list2[0].endswith(']'):
-      subvalue_2 = value[int(subkey_list2[0])]
+      subvalue_2 = value[int(subkey_list2[0][1:-1])]
     else:
       subvalue_2 = value[subkey_list2[0]]
 
     for i in range(1, len(subkey_list2)):
       if subkey_list2[i].startswith('[') and subkey_list2[i].endswith(']'):
-        subvalue_2 = subvalue_2[int(subkey_list2[i])]
+        subvalue_2 = subvalue_2[int(subkey_list2[i][1:-1])]
       else:
         subvalue_2 = subvalue_2[subkey_list2[i]]
 
@@ -256,13 +232,13 @@ class Plotter:
       # get the x axes value and append it to the appropriate array
       subkey_list1 = subkey[0][0].split('.')
       if subkey_list1[0].startswith('[') and subkey_list1[0].endswith(']'):
-        subvalue_1 = value[int(subkey_list1[0])]
+        subvalue_1 = value[int(subkey_list1[0][1:-1])]
       else:
         subvalue_1 = value[subkey_list1[0]]
 
         for i in range(1, len(subkey_list1)):
           if subkey_list1[i].startswith('[') and subkey_list1[i].endswith(']'):
-            subvalue_1 = subvalue_1[int(subkey_list1[i])]
+            subvalue_1 = subvalue_1[int(subkey_list1[i][1:-1])]
           else:
             subvalue_1 = subvalue_1[subkey_list1[i]]
 
