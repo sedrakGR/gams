@@ -260,7 +260,6 @@ class DataReaderFromFile(DataReaderInterface):
 
     elif value.is_any_type() and value.to_any().tag():
       # if capnp file then can have keys to be plotted
-      #print key
       return True
 
     return False

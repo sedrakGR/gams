@@ -112,6 +112,7 @@ class Plotter:
     fig = plt.figure(self.plot_name)
     plt.clf()
     value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
+
     if not value or not has_next:
       return
     if self.is_capnp_type == None:
@@ -147,6 +148,7 @@ class Plotter:
   # visualizes a certain subkey
   # not to be called from outside
   def visualize_subkey(self, value, index):
+
     subkey = self.subkeys[index]
 
     plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
@@ -158,7 +160,9 @@ class Plotter:
     elif subkey[0][0] == -1:
       if self.has_frames_key:
         # simulate as current time
-        self.values[index][0].append(datetime.now().microsecond * 1000)
+        current_time = int(
+          (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds() * data_reader_interface.nano_size)
+        self.values[index][0].append(current_time)
         self.values[index][1].append(value[subkey[1][0]])
       else:
         self.values[index][0].append(value.toi())
@@ -175,7 +179,7 @@ class Plotter:
         # index for the y axes value in KR is [1][0]
         self.values[index][1].append(value.retrieve_index(subkey[1][0]).to_double())
 
-      if self.number_of_points_per_plot > 0 and len(self.values[index][0]) > self.number_of_points_per_plot:
+    if self.number_of_points_per_plot > 0 and len(self.values[index][0]) > self.number_of_points_per_plot:
         self.values[index][0].pop(0)
         self.values[index][1].pop(0)
     plt.plot(self.values[index][0], self.values[index][1])
@@ -227,7 +231,10 @@ class Plotter:
     if subkey[0][0] == -1:
       # in this case we plot against time and
       # since we don't have toi here, we plot against current time
-      self.values[index][0].append(datetime.now().microsecond * 1000)
+      current_time = int(
+        (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds() * data_reader_interface.nano_size)
+
+      self.values[index][0].append(current_time)
     else:
       # get the x axes value and append it to the appropriate array
       subkey_list1 = subkey[0][0].split('.')
