@@ -1,25 +1,108 @@
 # config.yaml
-# yaml file to allow user to select which knowledge records they would like to see plotted 
+# yaml file to allow user to select which knowledge 
+# records they would like to see plotted 
 
-
+# Step 1: ----------------------------------------------------------------------------------------------------
+# Specify which source you would like to use to view
+# available Knowledge Records (or skip to Step 3 if you
+# already know nature of knowledge record)
 
 data_source:
 
   stk_file: '/home/stallone/data/output/agent.0/SAFE_reliability_rc_v3.4.0__pikachu-16-0004__2018-08-16-09-47-39.stk'
   transport: ''
+  schemas: '/home/stallone/shield_schemas/shield/'
 
-knowledge_record:    # Specify which KRs you would like plotted as a python list 
+# Step 2: ---------------------------------------------------------------------------------------------------
+# Specify which Knowledge Records you would like to 
+# see plotted to view available subkeys (run kr_displayer.py)
+
+knowledge_record:    
 
   frame_types:               
      ['p1_base_footprint']
   any_types:
-     ['sensors.baro']
+     ['sensors.imu.0']
 
-plot_style:          # Specify layout and plot properties
 
-  line_color: 'red'
-  x_axis_range: [0, 10]
-  y_axis_range: [0, 10]
-  z_axis_range: [0, 10]
+# Step 3: ---------------------------------------------------------------------------------------------------
+# Specify keys and subkeys you would like to plot and then run plotting_sample.py
+
+knowledge_record_subkeys: 
+
+  # This section allows for specification of Any data types
+  frame_types:     
+  
+    # Default: Use if reference frame is geo and would like to plot full 
+    # pose (position and orientation)     
+    'p1_base_link':
+
+    # Use if would like to change reference frame (frames must be related)
+    # Ordering does not matter
+    'p1_base_footprint': 
+      reference_frame: ['geo', 'p1_base_footprint']
+
+    # Use if you would like to map specific position/orientation variables 
+    # to x, y, or z axes. Value on lhs of colon indicates index or pose array
+    # and rhs indicates label for axis. Plot_1, etc. indicate subplots in figure
+    'p1_laser_stabilized': 
+      plot_1: 
+        0: 'x'
+        1: 'y'
+      plot_2: 
+        2: 'x'
+        1: 'y'
+      plot_3:
+        1: 'y'
+        2: 'z'
+      plot_4: 
+        -1: 'time'
+        2: 'z'
+
+    # You can combine the above specifications to view specific indices of
+    # transformed frames. 
+    'submap_0':
+      reference_frame: ['geo', 'submap_0']
+      plot_1: 
+        0: 'x'
+        1: 'y'
+      plot_2: 
+        2: 'x'
+        1: 'y'
+
+  # This section allows for specification of Any data types
+  any_types:
+
+    # # Default: Plot all subkeys in KR
+    # 'sensors.baro':
+
+    # Plot specific subkeys (will create 3D plot if subkey is 3D array, 2D if 2D array)
+    # 'sensors.mag': ['magneticField']
+
+    # 'sensors.baro':
+    #   plot_1: 
+    #     -1: 'time'
+    #     fluidPressure: 'y'
+
+    # Specify layout of plots within each subkey
+    'sensors.imu.0':
+      plot_1: 
+        -1: 'time'
+        angularVelocity.x: 'y'
+        angularVelocity.y: 'z'
+      plot_2: 
+        -1: 'time'        
+        linearAcceleration.x: 'y'
+
+
+# Step 4: ---------------------------------------------------------------------------------------------------------------
+# Specify plot layout and plot properties
+
+# plot_style:         
+
+#   line_color: 'red'
+#   x_axis_range: [0, 10]
+#   y_axis_range: [0, 10]
+#   z_axis_range: [0, 10]
 
   

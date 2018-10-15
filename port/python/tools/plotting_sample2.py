@@ -1,5 +1,5 @@
 from data_reader_interface import DataReaderFromFile
-from plotting import Plotter
+from plotting2 import Plotter
 import matplotlib.pyplot as plt
 import yaml 
 import sys
@@ -36,7 +36,9 @@ else:
     print('You have not specified a data source to read from!')
     sys.exit()
 
-reader = DataReaderFromFile(source)
+schemas_location = '/home/stallone/shield_schemas/shield/'
+
+reader = DataReaderFromFile(schemas_location, source)
 
 # Determine what KRs the user would like to be plotted 
 

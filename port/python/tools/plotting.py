@@ -34,6 +34,7 @@ class Plotter:
       return
 
     self.has_frames_key = False
+    self.is_capnp_type = None
     if key.startswith(data_reader_interface.frames_prefix):
       self.has_frames_key = True
 
@@ -84,6 +85,10 @@ class Plotter:
       self.values = []
       result = self.reader.get_current_value(key, frames_of_choice)
 
+      if isinstance(result[0], dict):
+        print "for capnp types you must provide subkeys to plot"
+        exit()
+
       # if reference frames are not provided with certain subkeys, than plot as 3d
       # or if the result is an array of 3 or more values, plot as 3d
       if self.has_frames_key or \
@@ -103,48 +108,39 @@ class Plotter:
 
 
   # this function creates or updates the plot for the provided config of plotter
-  def visualize(self): 
+  def visualize(self):
+    fig = plt.figure(self.plot_name)
+    plt.clf()
+    value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
 
-    pause = False
-    def onClick(event):
-      global pause
-      pause ^= True  
+    if not value or not has_next:
+      return
+    if self.is_capnp_type == None:
+      self.is_capnp_type = isinstance(value, dict)
 
-    if not pause: 
-      plt.figure(self.plot_name)
+    if self.has_frames_key:
+      new_values = [float(i) for i in value.to_string().split(',')]
+      value = new_values
 
-      value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
-      if not value or not has_next:
-        return
-
-      if self.has_frames_key:
-        new_values = [float(i) for i in value.to_string().split(',')]
-        value = new_values
-
-      if self.subkeys:
-
-        for i in range(0, len(self.subkeys)):
-          self.visualize_subkey(value, i)
+    if self.subkeys:
+      for i in range(0, len(self.subkeys)):
+        self.visualize_subkey(value, i)
+    else:
+      if self.plot_3d:
+        self.visualize_3d(value)
       else:
-
-        if self.plot_3d:
-          self.visualize_3d(value)
+        if self.has_frames_key:
+          # shall never reach here, because we will plot in 3d by default
+          return
         else:
-          if self.has_frames_key:
-            # shall never reach here, because we will plot in 3d by default
-            return
-          else:
-            self.values[0].append(value.toi())
-            self.values[1].append(value.to_double())
-          if self.number_of_points_per_plot > 0 and len(self.values[0]) > self.number_of_points_per_plot:
-            self.values[0].pop(0)
-            self.values[1].pop(0)
-          plt.subplot(self.number_of_rows, self.number_of_columns, 1, xlabel='toi')
-          plt.plot(self.values[0], self.values[1])
-          axpause = plt.axes([0.7, 0.05, 0.1, 0.075])
-          bpause = Button(axpause,'Pause/Play')
-          bpause.on_clicked(onClick)
+          self.values[0].append(value.toi())
+          self.values[1].append(value.to_double())
 
+        if self.number_of_points_per_plot > 0 and len(self.values[0]) > self.number_of_points_per_plot:
+          self.values[0].pop(0)
+          self.values[1].pop(0)
+        plt.subplot(self.number_of_rows, self.number_of_columns, 1, xlabel='toi')
+        plt.plot(self.values[0], self.values[1])
 
     plt.pause(0.000000001)
 
@@ -152,48 +148,41 @@ class Plotter:
   # visualizes a certain subkey
   # not to be called from outside
   def visualize_subkey(self, value, index):
-    global pause
-    pause = False
 
-    def onClick(event):
-      global pause
-      pause ^= True  
-       
-    # print pause 
-    if not pause:
-      subkey = self.subkeys[index]
+    subkey = self.subkeys[index]
 
-      plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
-                  ylabel=subkey[1][1])
+    plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
+                ylabel=subkey[1][1])
 
-      if subkey[0][0] == -1:
-        if self.has_frames_key:
-          # simulate as current time
-          self.values[index][0].append(datetime.now().microsecond * 1000)
-          self.values[index][0].append(value[subkey[1][0]])
-        else:
-          self.values[index][0].append(value.toi())
-          self.values[index][1].append(value.retrieve_index(subkey[1][0]).to_double())
+    if self.is_capnp_type:
+      self.visualize_capnp_value(value, subkey, index)
 
+    elif subkey[0][0] == -1:
+      if self.has_frames_key:
+        # simulate as current time
+        current_time = int(
+          (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds() * data_reader_interface.nano_size)
+        self.values[index][0].append(current_time)
+        self.values[index][1].append(value[subkey[1][0]])
       else:
-        if self.has_frames_key:
-          self.values[index][0].append(value[subkey[0][0]])
-          self.values[index][1].append(value[subkey[1][0]])
-        else:
-          # self.values[index][0] and self.values[index][1] represent our x and y axes values
+        self.values[index][0].append(value.toi())
+        self.values[index][1].append(value.retrieve_index(subkey[1][0]).to_double())
 
-          # index for the x axes value in KR is the [0][0]
-          self.values[index][0].append(value.retrieve_index(subkey[0][0]).to_double())
-          # index for the y axes value in KR is [1][0]
-          self.values[index][1].append(value.retrieve_index(subkey[1][0]).to_double())
+    else:
+      if self.has_frames_key:
+        self.values[index][0].append(value[subkey[0][0]])
+        self.values[index][1].append(value[subkey[1][0]])
+      else:
+        # self.values[index][0] and self.values[index][1] represent our x and y axes values
+        # index for the x axes value in KR is the [0][0]
+        self.values[index][0].append(value.retrieve_index(subkey[0][0]).to_double())
+        # index for the y axes value in KR is [1][0]
+        self.values[index][1].append(value.retrieve_index(subkey[1][0]).to_double())
 
-      if self.number_of_points_per_plot > 0 and len(self.values[index][0]) > self.number_of_points_per_plot:
+    if self.number_of_points_per_plot > 0 and len(self.values[index][0]) > self.number_of_points_per_plot:
         self.values[index][0].pop(0)
         self.values[index][1].pop(0)
-      plt.plot(self.values[index][0], self.values[index][1])
-      axpause = plt.axes([0.7, 0.05, 0.1, 0.075])
-      bpause = Button(axpause,'Pause/Play')
-      bpause.on_clicked(onClick)
+    plt.plot(self.values[index][0], self.values[index][1])
 
       
 
@@ -216,3 +205,49 @@ class Plotter:
 
     ax = plt.subplot(self.number_of_rows, self.number_of_columns, 1, projection='3d')
     plt.plot(self.values[0], self.values[1], self.values[2])
+
+  # visualizing capnp is a bit different, parsing keys and setting into the
+  def visualize_capnp_value(self, value, subkey, index):
+    #print value
+    # the second one is always a valid value
+    subkey_list2 = subkey[1][0].split('.')
+    if len(subkey_list2) == 0:
+      # shall never happen
+      return
+
+
+    # get the first value from map as subvalue_2
+    if subkey_list2[0].startswith('[') and subkey_list2[0].endswith(']'):
+      subvalue_2 = value[int(subkey_list2[0][1:-1])]
+    else:
+      subvalue_2 = value[subkey_list2[0]]
+
+    for i in range(1, len(subkey_list2)):
+      if subkey_list2[i].startswith('[') and subkey_list2[i].endswith(']'):
+        subvalue_2 = subvalue_2[int(subkey_list2[i][1:-1])]
+      else:
+        subvalue_2 = subvalue_2[subkey_list2[i]]
+
+    if subkey[0][0] == -1:
+      # in this case we plot against time and
+      # since we don't have toi here, we plot against current time
+      current_time = int(
+        (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds() * data_reader_interface.nano_size)
+
+      self.values[index][0].append(current_time)
+    else:
+      # get the x axes value and append it to the appropriate array
+      subkey_list1 = subkey[0][0].split('.')
+      if subkey_list1[0].startswith('[') and subkey_list1[0].endswith(']'):
+        subvalue_1 = value[int(subkey_list1[0][1:-1])]
+      else:
+        subvalue_1 = value[subkey_list1[0]]
+
+        for i in range(1, len(subkey_list1)):
+          if subkey_list1[i].startswith('[') and subkey_list1[i].endswith(']'):
+            subvalue_1 = subvalue_1[int(subkey_list1[i][1:-1])]
+          else:
+            subvalue_1 = subvalue_1[subkey_list1[i]]
+
+      self.values[index][0].append(subvalue_1)
+    self.values[index][1].append(subvalue_2)
