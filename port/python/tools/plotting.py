@@ -35,6 +35,7 @@ class Plotter:
 
     self.has_frames_key = False
     self.is_capnp_type = None
+    reader.get_keys()
     if key.startswith(data_reader_interface.frames_prefix):
       self.has_frames_key = True
 
@@ -113,8 +114,10 @@ class Plotter:
     plt.clf()
     value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
 
-    if not value or not has_next:
+
+    if (value == None) or not has_next:
       return
+
     if self.is_capnp_type == None:
       self.is_capnp_type = isinstance(value, dict)
 
@@ -208,8 +211,11 @@ class Plotter:
 
   # visualizing capnp is a bit different, parsing keys and setting into the
   def visualize_capnp_value(self, value, subkey, index):
-    #print value
     # the second one is always a valid value
+
+
+    # for dictionaries subkeys can be represented as
+    # 'key1.[index1].key2.key3' it can has keys inside keys and indexes bounded by `[]`
     subkey_list2 = subkey[1][0].split('.')
     if len(subkey_list2) == 0:
       # shall never happen
@@ -220,6 +226,8 @@ class Plotter:
     if subkey_list2[0].startswith('[') and subkey_list2[0].endswith(']'):
       subvalue_2 = value[int(subkey_list2[0][1:-1])]
     else:
+      print value
+      print subkey_list2
       subvalue_2 = value[subkey_list2[0]]
 
     for i in range(1, len(subkey_list2)):

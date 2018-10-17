@@ -1,5 +1,6 @@
 import madara
 import madara.knowledge as engine
+import madara.transport as transport
 from madara.knowledge import Any
 import gams.pose as gp
 import os
@@ -14,6 +15,8 @@ from time import sleep
 
 toi_key_suffix = ".toi"
 frames_prefix = '.gams.frames'
+#TODO: check if 'frames' is the same with what we load as .gams.frames to be loaded
+#frames_prefix = 'frames'
 
 fes = gp.FrameEvalSettings()
 
@@ -36,7 +39,7 @@ class DataReaderInterface:
   # if no appropriate value found, return None
 
   def get_current_value(self, key, frames_of_choice=['geo', 'p1_base_stabilized']):
-    passhttps://gitlab.com/shield-ai/general/mapping
+    pass 
 
   def capnp_crunch(self, key, value):
     schema = value.to_any().tag()
@@ -132,8 +135,7 @@ class DataReaderFromFile(DataReaderInterface):
   # end of def get_keys
 
 
-  #TODO: fix returning only value once data plotting interface is fixed
-  # now returns a pair, which consists of current value (simulates as live) for the given key
+  # returns a pair, which consists of current value (simulates as live) for the given key
   # and a flag indicatingif the value is already the latest
 
   #frames_of_choice are gams frame, to know which frames_of_choice to retrieve
@@ -268,13 +270,8 @@ class DataReaderFromFile(DataReaderInterface):
 
   # end of def check_type_for_plotting
 
-
-
 # interface to retrieve data from kb
 class DataReaderFromKB(DataReaderInterface):
-
-  #TODO: we might need to improve args,
-  # to get ip and ports and set up everything inside the constructor
 
   # constructor takes capnp schemas location and knowledge_base
   def __init__(self, capnp_schemas_folder, knowledge_base):
@@ -287,12 +284,13 @@ class DataReaderFromKB(DataReaderInterface):
     self.capnp_folder = capnp_schemas_folder
   # end of constructor
 
-
   def get_keys(self):
     if not self.knowledge_base:
       # if no valid kb return nothing
       return {}
-    return self.knowledge_base.to_map("").keys()
+    #TODO: fix this
+    #return self.knowledge_base.get_history("")
+    return None
   # end of def get_keys()
 
   # frames of choice can be
@@ -347,3 +345,42 @@ class DataReaderFromKB(DataReaderInterface):
   def get_capnp_value(self, key, value):
     return self.capnp_crunch(key, value).to_dict()
   # end of get_capnp_value
+# end of data reader interface from KB
+
+
+# Class to create KB
+class KnowledgeBaseCreator():
+  def __init__(self, kb_name, transport_type, hosts, queue_length=None,
+               read_threads=None, read_thread_hertz=None):
+
+    self.kb_name = kb_name
+    # hosts must be not empty
+    if len(hosts) == 0:
+      print "hosts are not provided"
+      return
+    self.settings = transport.QoSTransportSettings()
+    for host in hosts:
+      self.settings.hosts.append(host)
+    print transport_type
+    if transport_type == 'ZMQ':
+      self.settings.type = transport.TransportTypes.ZMQ
+    elif transport_type == 'UDP':
+      self.settings.type = transport.TransportTypes.UDP
+    elif transport_type == 'MULTICAST':
+      self.settings.type = transport.TransportTypes.MULTICAST
+    elif transport_type == 'BROADCAST':
+      self.settings.type = transport.TransportTypes.BROADCAST
+
+    #self.settings.type = getattr(KnowledgeBaseCreator, 'transport.TransportTypes.%s' % transport_type)()
+    if queue_length:
+      self.settings.queue_length = queue_length
+    if read_threads:
+      self.settings.read_threads = read_threads
+    if read_thread_hertz:
+      self.settings.read_thread_hertz = read_thread_hertz
+
+  # create a knowledge base with specified settings
+  def get_knowledge_base(self):
+    if self.settings:
+      return engine.KnowledgeBase(self.kb_name, self.settings)
+    return None
