@@ -4,95 +4,140 @@
 
 # Step 1: ----------------------------------------------------------------------------------------------------
 # Specify which source you would like to use to view
-# available Knowledge Records (or skip to Step 3 if you
-# already know nature of knowledge record)
+# available Knowledge Records and then run kr_displayer.py
+# (or skip to Step 3 if you already know nature of knowledge 
+# record). Only specify a .stk file or a transport type 
+# (leave other one blank)
 
 data_source:
 
   stk_file: '/home/stallone/data/output/agent.0/SAFE_reliability_rc_v3.4.0__pikachu-16-0004__2018-08-16-09-47-39.stk'
-  transport: ''
+  transport:
+    transport_type: 'ZMQ'
+    hosts: ['tcp://127.0.0.1:40000','tcp://127.0.0.1:40001']
+    kb_name: 'Test'
+    queue_length: 100000000
+    read_threads: 1
+    read_thread_hertz: 1000
+
   schemas: '/home/stallone/shield_schemas/shield/'
 
 # Step 2: ---------------------------------------------------------------------------------------------------
-# Specify which Knowledge Records you would like to 
-# see plotted to view available subkeys (run kr_displayer.py)
+# Specify which Knowledge Records' internal data format
+# you would like to see to accurately specify available
+# subkeys (run kr_displayer.py again). Input as python list
+# Ex. ['sensors.baro', 'p1_base_footprint']
 
 knowledge_record:    
 
   frame_types:               
-     ['p1_base_footprint']
+     ['geo', 'p1_base_link']
   any_types:
-     ['sensors.imu.0']
+     ['state_estimation.pose_graph.pose_in_map.9']
 
 
 # Step 3: ---------------------------------------------------------------------------------------------------
-# Specify keys and subkeys you would like to plot and then run plotting_sample.py
+# This is where plotting takes place. Specify keys and subkeys you would like 
+# to plot and then run plotting_sample.py in terminal followed by this config file
+# Ex. user@machine:~/gams/port/python/tools$ python plotting_sample.py config.yaml
+# Note: If you would like to see multiple instance of same KR with different arguments,
+# append a unique identifier to the key name (Ex. 'submap_6' and 'submap_6_1')
 
 knowledge_record_subkeys: 
 
   # This section allows for specification of Any data types
   frame_types:     
   
-    # Default: Use if reference frame is geo and would like to plot full 
-    # pose (position and orientation)     
-    'p1_base_link':
+    # # Default: Use if reference frame is geo and would like to plot full 
+    # # pose (position and orientation)  
+    # 'p1_base_link':
+     
+    # 'p1_base_link':
+    #   points_per_plot: 50
 
-    # Use if would like to change reference frame (frames must be related)
-    # Ordering does not matter
-    'p1_base_footprint': 
-      reference_frame: ['geo', 'p1_base_footprint']
+    # # Use if would like to change reference frame (frames must be related)
+    # # Ordering does not matter
+    # 'p1_base_footprint': 
+    #   reference_frame: ['geo', 'p1_base_footprint']
 
-    # Use if you would like to map specific position/orientation variables 
-    # to x, y, or z axes. Value on lhs of colon indicates index or pose array
-    # and rhs indicates label for axis. Plot_1, etc. indicate subplots in figure
-    'p1_laser_stabilized': 
-      plot_1: 
-        0: 'x'
-        1: 'y'
-      plot_2: 
-        2: 'x'
-        1: 'y'
-      plot_3:
-        1: 'y'
-        2: 'z'
-      plot_4: 
-        -1: 'time'
-        2: 'z'
+    # 'p1_base_link': 
+    #   reference_frame: ['geo', 'p1_base_link']
+    #   points_per_plot: 100
 
-    # You can combine the above specifications to view specific indices of
-    # transformed frames. 
-    'submap_0':
-      reference_frame: ['geo', 'submap_0']
-      plot_1: 
-        0: 'x'
-        1: 'y'
-      plot_2: 
-        2: 'x'
-        1: 'y'
+    # # Use if you would like to map specific position/orientation indices 
+    # # to x, y, or z axes. Value on lhs of colon indicates index or pose array
+    # # and rhs indicates label for axis. Plot_1, etc. indicate subplots in figure
+    # 'p1_laser_stabilized': 
+    #   plot_1: 
+    #     0: 'x'
+    #     1: 'y'
+    #   plot_2: 
+    #     -1: 'time'
+    #     0: 'x'
+    #   plot_3:
+    #     -1: 'time'
+    #     1: 'y'
+    #   plot_4: 
+    #     2: 'z'
+    #     -1: 'time'
+
+    #   points_per_plot: 25
+
+    # # You can combine the above specifications to view specific indices of
+    # # transformed frames. 
+    # 'submap_0':
+    #   reference_frame: ['p1_odom', 'submap_0']
+    #   plot_1: 
+    #     -1: 'time'
+    #     1: 'y'
+    #   plot_2: 
+    #     -1: 'time'
+    #     0: 'x'
+    #   plot_3:
+    #     2: 'z'
+    #     -1: 'time'
+
+    #   points_per_plot: 50
 
   # This section allows for specification of Any data types
   any_types:
 
-    # # Default: Plot all subkeys in KR
+    # # # Default: Plot all subkeys in KR
     # 'sensors.baro':
 
-    # Plot specific subkeys (will create 3D plot if subkey is 3D array, 2D if 2D array)
+    # # # Plot specific subkeys (will create 3D plot if subkey is 3D array, 2D if 2D array)
     # 'sensors.mag': ['magneticField']
 
     # 'sensors.baro':
     #   plot_1: 
     #     -1: 'time'
-    #     fluidPressure: 'y'
+    #     fluidPressure: 'Fluid Pressure'
 
     # Specify layout of plots within each subkey
     'sensors.imu.0':
       plot_1: 
         -1: 'time'
-        angularVelocity.x: 'y'
-        angularVelocity.y: 'z'
+        angularVelocity.x: 'Angular Velocity x' 
+        # angularVelocity.y: 'Angular Velocity y'
       plot_2: 
         -1: 'time'        
-        linearAcceleration.x: 'y'
+        angularVelocity.y: 'Angular Velocity y'
+
+      points_per_plot: 25
+
+    # 'sensors.mag':
+    #   plot_1: 
+    #     -1: 'time'
+    #     magneticField.x: 'y' 
+
+    # # Specify layout of plots within each subkey
+    # 'aviate.goal_path':
+    #   plot_1:
+    #     -1: 'time'
+    #     points.[0].x: 'x'
+    #   plot_2:
+    #     -1: 'time'
+    #     points.[0].y: 'y'
 
 
 # Step 4: ---------------------------------------------------------------------------------------------------------------
