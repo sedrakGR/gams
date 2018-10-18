@@ -7,7 +7,6 @@ import sys
 print sys.argv
 if len(sys.argv) >= 2:
     plotters = config_parser.create_plotters_from_config(sys.argv[1])
-    print len(plotters)
     # Visualize the data
     while True:
         for key in plotters:

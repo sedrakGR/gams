@@ -21,6 +21,11 @@ frames_prefix = '.gams.frames'
 fes = gp.FrameEvalSettings()
 
 
+# call this to override the default gams.frames key of frames
+def set_frames_prefix(prefix):
+  global frames_prefix
+  frames_prefix = prefix
+
 nano_size = 1000000000
 
 
@@ -270,6 +275,9 @@ class DataReaderFromFile(DataReaderInterface):
 
   # end of def check_type_for_plotting
 
+
+
+
 # interface to retrieve data from kb
 class DataReaderFromKB(DataReaderInterface):
 
@@ -288,8 +296,8 @@ class DataReaderFromKB(DataReaderInterface):
     if not self.knowledge_base:
       # if no valid kb return nothing
       return {}
-    #TODO: fix this
-    #return self.knowledge_base.get_history("")
+    #TODO: fix this, to_map is not working
+    #return self.knowledge_base.to_map()
     return None
   # end of def get_keys()
 
@@ -298,11 +306,15 @@ class DataReaderFromKB(DataReaderInterface):
 
   # key is the key for the knowledge record we want to get
   def get_current_value(self, key, frames_of_choice=['geo', 'p1_base_stabilized']):
-
     # somehow no kb available
     if not self.knowledge_base:
       print "no valid knowledge base set"
       return None, False
+
+
+    if key.startswith(frames_prefix):
+      # gams frames are handled differently
+      return self.get_frame(frames_of_choice)
 
     value = self.knowledge_base.get(key)
 
@@ -310,9 +322,7 @@ class DataReaderFromKB(DataReaderInterface):
       # none but may appear later
       return None, True
 
-    if key.startswith(frames_prefix):
-      # gams frames are handled differently
-      return self.get_gams_frame(frames_of_choice)
+
 
 
 
@@ -326,8 +336,7 @@ class DataReaderFromKB(DataReaderInterface):
     return value, True
 
   # gams frames need a bit different handling, this returns gams frames coords
-  def get_gams_frame(self, frames_of_choice):
-
+  def get_frame(self, frames_of_choice):
     try:
       trans_frames = gp.ReferenceFrame.load_tree(self.knowledge_base,
                                                  madara.from_pystrings(frames_of_choice),

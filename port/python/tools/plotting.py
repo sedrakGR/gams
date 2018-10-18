@@ -226,8 +226,6 @@ class Plotter:
     if subkey_list2[0].startswith('[') and subkey_list2[0].endswith(']'):
       subvalue_2 = value[int(subkey_list2[0][1:-1])]
     else:
-      print value
-      print subkey_list2
       subvalue_2 = value[subkey_list2[0]]
 
     for i in range(1, len(subkey_list2)):
