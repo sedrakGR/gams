@@ -4,6 +4,7 @@ import data_reader_interface
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.widgets import Button
 from datetime import datetime
+import numbers
 
 keys = []
 
@@ -35,6 +36,7 @@ class Plotter:
 
     self.has_frames_key = False
     self.is_capnp_type = None
+    print reader.get_keys()
     if key.startswith(data_reader_interface.frames_prefix):
       self.has_frames_key = True
 
@@ -53,54 +55,13 @@ class Plotter:
     self.plot_3d = False
     self.number_of_points_per_plot = points_per_plot
 
+    self.values = {}
     if subkeys:
-      lenght = len(subkeys)
-
-      rows = math.sqrt(lenght)
-      self.number_of_rows = int(rows)
-      self.number_of_columns = self.number_of_rows
-
-      #try to make subplots plots in a square form grid
-      # so all the subplots are visible in a better way
-      # so adjust it twise if needed
-      # first adjust
-      if self.number_of_rows * self.number_of_columns < lenght:
-        self.number_of_columns += 1
-      #second adjust
-      if self.number_of_rows * self.number_of_columns < lenght:
-        self.number_of_rows += 1
-
-      self.values = []
-
-      # each subplot to have its values by index
-      for i in range(0, lenght):
-        # since it's 2d it has two arrays
-        self.values.append(([], []))
-
-
+      self.adjust_rows_and_columns(len(subkeys))
 
     else: # in this case plot the given key in one subplot
       self.number_of_rows = 1
       self.number_of_columns = 1
-      self.values = []
-      result = self.reader.get_current_value(key, frames_of_choice)
-
-      if isinstance(result[0], dict):
-        print "for capnp types you must provide subkeys to plot"
-        exit()
-
-      # if reference frames are not provided with certain subkeys, than plot as 3d
-      # or if the result is an array of 3 or more values, plot as 3d
-      if self.has_frames_key or \
-        (not (result[0] == None) and result[0].retrieve_index(2).exists()):
-        self.plot_3d = True
-        self.values.append([])
-        self.values.append([])
-        self.values.append([])
-      else:
-        # twice so
-        self.values.append([])
-        self.values.append([])
 
   def __del__(self):
     keys.remove(self.plot_name)
@@ -112,11 +73,12 @@ class Plotter:
     fig = plt.figure(self.plot_name)
     plt.clf()
     value, has_next = self.reader.get_current_value(self.name, self.frames_of_choice)
-
-    if not value or not has_next:
+    if (value == None) or not has_next:
       return
+
     if self.is_capnp_type == None:
       self.is_capnp_type = isinstance(value, dict)
+
 
     if self.has_frames_key:
       new_values = [float(i) for i in value.to_string().split(',')]
@@ -126,21 +88,7 @@ class Plotter:
       for i in range(0, len(self.subkeys)):
         self.visualize_subkey(value, i)
     else:
-      if self.plot_3d:
-        self.visualize_3d(value)
-      else:
-        if self.has_frames_key:
-          # shall never reach here, because we will plot in 3d by default
-          return
-        else:
-          self.values[0].append(value.toi())
-          self.values[1].append(value.to_double())
-
-        if self.number_of_points_per_plot > 0 and len(self.values[0]) > self.number_of_points_per_plot:
-          self.values[0].pop(0)
-          self.values[1].pop(0)
-        plt.subplot(self.number_of_rows, self.number_of_columns, 1, xlabel='toi')
-        plt.plot(self.values[0], self.values[1])
+      self.visualize_key(value, self.name)
 
     plt.pause(0.000000001)
 
@@ -151,13 +99,21 @@ class Plotter:
 
     subkey = self.subkeys[index]
 
-    plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
-                ylabel=subkey[1][1])
+    # plot all of values inside subkey
 
     if self.is_capnp_type:
       self.visualize_capnp_value(value, subkey, index)
+      return
 
-    elif subkey[0][0] == -1:
+    plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
+                  ylabel=subkey[1][1])
+
+    # if the object is not capnp type it is not expected to be a dictionary
+
+    if not (self.values.has_key(index)):
+      self.values[index] = ([], [])
+
+    if subkey[0][0] == -1:
       if self.has_frames_key:
         # simulate as current time
         current_time = int(
@@ -184,49 +140,23 @@ class Plotter:
         self.values[index][1].pop(0)
     plt.plot(self.values[index][0], self.values[index][1])
 
-      
 
-
-  # visualizes 3d plot
-  # not to be called from outside
-  def visualize_3d(self, value):
-    if self.has_frames_key:
-      self.values[0].append(value[0])
-      self.values[1].append(value[1])
-      self.values[2].append(value[2])
-    else:
-      self.values[0].append(value.retrieve_index(0).to_double())
-      self.values[1].append(value.retrieve_index(1).to_double())
-      self.values[2].append(value.retrieve_index(2).to_double())
-    if self.number_of_points_per_plot > 0 and len(self.values[0]) > self.number_of_points_per_plot:
-      self.values[0].pop(0)
-      self.values[1].pop(0)
-      self.values[2].pop(0)
-
-    ax = plt.subplot(self.number_of_rows, self.number_of_columns, 1, projection='3d')
-    plt.plot(self.values[0], self.values[1], self.values[2])
 
   # visualizing capnp is a bit different, parsing keys and setting into the
   def visualize_capnp_value(self, value, subkey, index):
-    #print value
     # the second one is always a valid value
-    subkey_list2 = subkey[1][0].split('.')
-    if len(subkey_list2) == 0:
-      # shall never happen
+    print subkey
+    if not isinstance(subkey, tuple):
+      subvalue = self.get_value_for_key(subkey, value)
+      # in this case we expect only one subkey, so we visualize that
+      self.visualize_key(subvalue, subkey[0])
       return
 
+    subvalue_2 = self.get_value_for_key(subkey[1][0], value)
 
-    # get the first value from map as subvalue_2
-    if subkey_list2[0].startswith('[') and subkey_list2[0].endswith(']'):
-      subvalue_2 = value[int(subkey_list2[0][1:-1])]
-    else:
-      subvalue_2 = value[subkey_list2[0]]
-
-    for i in range(1, len(subkey_list2)):
-      if subkey_list2[i].startswith('[') and subkey_list2[i].endswith(']'):
-        subvalue_2 = subvalue_2[int(subkey_list2[i][1:-1])]
-      else:
-        subvalue_2 = subvalue_2[subkey_list2[i]]
+    #init values lists to be plotted
+    if not (self.values.has_key(index)):
+      self.values[index] = ([], [])
 
     if subkey[0][0] == -1:
       # in this case we plot against time and
@@ -237,17 +167,144 @@ class Plotter:
       self.values[index][0].append(current_time)
     else:
       # get the x axes value and append it to the appropriate array
-      subkey_list1 = subkey[0][0].split('.')
-      if subkey_list1[0].startswith('[') and subkey_list1[0].endswith(']'):
-        subvalue_1 = value[int(subkey_list1[0][1:-1])]
-      else:
-        subvalue_1 = value[subkey_list1[0]]
-
-        for i in range(1, len(subkey_list1)):
-          if subkey_list1[i].startswith('[') and subkey_list1[i].endswith(']'):
-            subvalue_1 = subvalue_1[int(subkey_list1[i][1:-1])]
-          else:
-            subvalue_1 = subvalue_1[subkey_list1[i]]
-
+      subvalue_1 = self.get_value_for_key(subkey[0][0], value)
       self.values[index][0].append(subvalue_1)
     self.values[index][1].append(subvalue_2)
+    plt.subplot(self.number_of_rows, self.number_of_columns, index + 1, xlabel=subkey[0][1],
+                ylabel=subkey[1][1])
+    plt.plot(self.values[index][0], self.values[index][1])
+
+
+
+
+  # visualizes a single key with no subkeys provided
+  def visualize_key(self, value, key):
+    if not (self.values.has_key(key)):
+      self.values[key] = {}
+
+    current_time = int(
+      (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds() * data_reader_interface.nano_size)
+    # if dictionary (can happen for capnp types)
+    if isinstance(value, dict):
+
+      if (len(self.values[key]) == 0):
+        self.adjust_rows_and_columns(len(value.keys()))
+      else:
+        self.adjust_rows_and_columns(len(self.values[key]))
+      index = 1
+      for curr_subkey in value.keys():
+        curr_value = value[curr_subkey]
+
+        # plot only number types
+        if isinstance(curr_value, numbers.Number):
+          if not (self.values[key].has_key(curr_subkey)):
+            self.values[key][curr_subkey] = ([], [])
+          self.values[key][curr_subkey][0].append(current_time)
+          self.values[key][curr_subkey][1].append(curr_value)
+
+          if self.number_of_points_per_plot > 0 and len( self.values[key][curr_subkey][0]) > self.number_of_points_per_plot:
+            self.values[key][curr_subkey][0].pop(0)
+            self.values[key][curr_subkey][1].pop(0)
+          plt.subplot(self.number_of_rows, self.number_of_columns, index, xlabel='time', ylabel=curr_subkey)
+
+          plt.plot(self.values[key][curr_subkey][0], self.values[key][curr_subkey][1])
+          index += 1
+
+    #if a list type
+    elif isinstance(value, list):
+      lenght = len(value)
+      self.adjust_rows_and_columns(lenght)
+      for i in range(0, lenght):
+        if not (self.values[key].has_key(i)):
+          self.values[key][i] = ([], [])
+        y_label = (key + '.' + str(i))
+        plt.subplot(self.number_of_rows, self.number_of_columns, i + 1, xlabel='time', ylabel=y_label)
+        self.values[key][i][1].append(value[i])
+        self.values[key][i][0].append(current_time)
+
+        # remove additional values
+        if self.number_of_points_per_plot > 0 and len( self.values[key][i][0]) > self.number_of_points_per_plot:
+          self.values[key][i][0].pop(0)
+          self.values[key][i][1].pop(0)
+
+        plt.plot(self.values[key][i][0], self.values[key][i][1])
+    # value is KR, check if array type
+    # similar to above one, but rather need to read value in a bit different way
+    elif value.is_array_type():
+      # try to plot all the values of the array against time
+      size = value.size()
+      self.adjust_rows_and_columns(size)
+      for i in range(0, size):
+        if not (self.values[key].has_key(i)):
+          self.values[key][i] = ([], [])
+        y_label = (key + '.' + str(i))
+        plt.subplot(self.number_of_rows, self.number_of_columns, i + 1, xlabel='time', ylabel=y_label)
+        self.values[key][i][1].append(value.retrieve_index(i).to_double())
+        self.values[key][i][0].append(value.toi())
+
+        # remove additional values
+        if self.number_of_points_per_plot > 0 and len( self.values[key][i][0]) > self.number_of_points_per_plot:
+          self.values[key][i][0].pop(0)
+          self.values[key][i][1].pop(0)
+
+        plt.plot(self.values[key][i][0], self.values[key][i][1])
+
+
+    else:
+      # it should be a number type
+      plt.subplot(self.number_of_rows, self.number_of_columns, 1, ylabel=key, xlabel='time')
+      if not (self.values[key].has_key(key)):
+        # looks redundant having same key in key, but this lets to keep the structure a bit more generic
+        self.values[key][key] = ([], [])
+
+
+      self.values[key][key][1].append(value.to_double())
+      self.values[key][key][0].append(value.toi())
+
+      if self.number_of_points_per_plot > 0 and len(self.values[key][key][0]) > self.number_of_points_per_plot:
+        self.values[key][key][0].pop(0)
+        self.values[key][key][1].pop(0)
+
+
+
+
+  # adjust number of rows and columns according to the subplots lenght
+  def adjust_rows_and_columns(self, lenght):
+
+    rows = math.sqrt(lenght)
+    self.number_of_rows = int(rows)
+    self.number_of_columns = self.number_of_rows
+
+    # try to make subplots plots in a square form grid
+    # so all the subplots are visible in a better way
+    # so adjust it twise if needed
+    # first adjust
+    if self.number_of_rows * self.number_of_columns < lenght:
+      self.number_of_columns += 1
+    # second adjust
+    if self.number_of_rows * self.number_of_columns < lenght:
+      self.number_of_rows += 1
+
+
+  # for a capnp type objects parse the key and retrieve the value
+  def get_value_for_key(self, key, value):
+    # for dictionaries subkeys can be represented as
+    # 'key1.[index1].key2.key3' it can has keys inside keys and indexes bounded by `[]`
+    subkeys = key.split('.')
+    if len(subkeys) == 0:
+      # shall never happen
+      return None
+
+    # get the first value from map as subvalue_2
+    if subkeys[0].startswith('[') and subkeys[0].endswith(']'):
+      subvalue = value[int(subkeys[0][1:-1])]
+    else:
+      subvalue = value[subkeys[0]]
+
+    for i in range(1, len(subkeys)):
+      if subkeys[i].startswith('[') and subkeys[i].endswith(']'):
+        subvalue = subvalue[int(subkeys[i][1:-1])]
+      else:
+        subvalue = subvalue[subkeys[i]]
+
+    return subvalue
